@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Management</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+<h1>Cookie Management</h1>
+<hr />
+<h2>Get Cookie</h2>
+<form id="getCookieForm">
+    Domain: <input type="text" id="getCookieFormDomainInput" name="domain">
+    <button type="button" onclick="getCookie()">Get Cookie</button>
+</form>
+<div id="cookieResult"></div>
+<hr />
+<h2>Get Cookie List</h2>
+<button type="button" onclick="getCookieList()">Get Cookie List</button>
+<div id="cookieListResult"></div>
+<hr />
+<h2>Get Domain List</h2>
+<button type="button" onclick="getDomainList()">Get Domain List</button>
+<div id="domainListResult"></div>
+<hr />
+<h2>Insert or Update Cookie</h2>
+<form id="insertCookieForm">
+    Project ID: <input type="text" id="projectIdInput" name="projectId"><br>
+    Project Name: <input type="text" id="projectNameInput" name="projectName"><br>
+    Domain: <input type="text" id="domainInput" name="domain"><br>
+    Cookie String: <input type="text" id="cookieStrInput" name="cookieStr"><br>
+    <button type="button" onclick="insertCookie()">Insert Cookie</button>
+</form>
+<div id="insertResult"></div>
+<hr />
+<h2>Delete Cookie</h2>
+<form id="delCookieForm">
+    Project ID: <input type="text" id="delProjectIdInput" name="projectId"><br>
+    Domain: <input type="text" id="delDomainInput" name="domain"><br>
+    <button type="button" onclick="delCookie()">Delete Cookie</button>
+</form>
+<div id="delResult"></div>
+<hr />
+<h2>Get User List</h2>
+<button type="button" onclick="getUserList()">Get User List</button>
+<div id="getUserList"></div>
+<hr />
+<h2>Get Role List</h2>
+<button type="button" onclick="getRoleList()">Get User List</button>
+<div id="getRoleList"></div>
+<hr />
+<h2>Insert Or Update User</h2>
+<form id="insertOrUpdateUser">
+    User Name: <input type="text" id="insertOrUpdateUserName" name="insertOrUpdateUserName"><br>
+    User Pwd: <input type="text" id="insertOrUpdateUserPwd" name="insertOrUpdateUserPwd"><br>
+    Is Use: <input type="text" id="insertOrUpdateUserIsUse" name="insertOrUpdateUserIsUse">(1表示启用,非1表示弃用)<br>
+    Role ID: <input type="text" id="insertOrUpdateUserRoleId" name="insertOrUpdateUserRoleId">(多个RoleId用[,]分割)<br>
+    <button type="button" onclick="insertOrUpdateUser()">Insert Or Update User</button>
+</form>
+<div id="insertOrUpdateUserHtml"></div>
+<hr />
+<h2>Delete User</h2>
+<form id="deleteUser">
+    User ID: <input type="text" id="deleteUserId" name="deleteUserId"><br>
+    User Name: <input type="text" id="deleteUserName" name="deleteUserName"><br>
+    <button type="button" onclick="deleteUser()">Delete User</button>
+</form>
+<div id="deleteUserHtml"></div>
+<script>
+    function getCookie() {
+        var domain = document.getElementById('getCookieFormDomainInput').value;
+        fetch('/cookieManage/getCookie?domain=' + domain)
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('cookieResult').innerHTML = displayCookie(JSON.parse(data));
+            });
+    }
+
+    function getCookieList() {
+        fetch('/cookieManage/getCookieList')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('cookieListResult').innerHTML = displayCookie(JSON.parse(data));
+            });
+    }
+
+    function getDomainList() {
+        fetch('/cookieManage/getDomainList')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('domainListResult').innerHTML = displayCookie(JSON.parse(data));
+            });
+    }
+
+    function insertCookie() {
+        var projectId = document.getElementById('projectIdInput').value;
+        var projectName = document.getElementById('projectNameInput').value;
+        var domain = document.getElementById('domainInput').value;
+        var cookieStr = document.getElementById('cookieStrInput').value;
+
+        fetch('/cookieManage/insertAndUpdateCookie', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                projectId: projectId,
+                projectName: projectName,
+                domain: domain,
+                cookieStr: cookieStr
+            })
+        })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+            });
+    }
+
+    function delCookie() {
+        var delProjectIdInput = document.getElementById('delProjectIdInput').value;
+        var delDomainInput = document.getElementById('delDomainInput').value;
+
+        fetch('/cookieManage/delCookie', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                projectId: delProjectIdInput,
+                domain: delDomainInput
+            })
+        })
+        .then(response => response.text())
+        .then(data => {
+            alert(data);
+        });
+    }
+
+    function getUserList(){
+        fetch('/userManage/getUserList')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('getUserList').innerHTML = displayCookie(JSON.parse(data));
+            });
+    }
+
+    function getRoleList(){
+        fetch('/userManage/getRoleList')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('getRoleList').innerHTML = displayCookie(JSON.parse(data));
+        });
+    }
+
+    function insertOrUpdateUser() {
+        var insertOrUpdateUserName = document.getElementById('insertOrUpdateUserName').value;
+        var insertOrUpdateUserPwd = document.getElementById('insertOrUpdateUserPwd').value;
+        var insertOrUpdateUserIsUse = document.getElementById('insertOrUpdateUserIsUse').value;
+        var insertOrUpdateUserRoleId = document.getElementById('insertOrUpdateUserRoleId').value;
+
+        fetch('/userManage/insertOrUpdateUser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userName: insertOrUpdateUserName,
+                userPwd: insertOrUpdateUserPwd,
+                isUse: insertOrUpdateUserIsUse,
+                roleId: insertOrUpdateUserRoleId,
+            })
+        })
+        .then(response => response.text())
+        .then(data => {
+            alert(data);
+        });
+    }
+
+    function deleteUser() {
+        var deleteUserId = document.getElementById('deleteUserId').value;
+        var deleteUserName = document.getElementById('deleteUserName').value;
+
+        fetch('/userManage/deleteUser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userId: deleteUserId,
+                userName: deleteUserName
+            })
+        })
+        .then(response => response.text())
+        .then(data => {
+            alert(data);
+        });
+    }
+
+    function displayCookie(data) {
+        var table = '<table border="1"><tr>';
+        // 动态生成表头
+        for (var key in data[0]) {
+            table += '<th>' + key + '</th>';
+        }
+        table += '</tr>';
+        // 遍历数据生成表格内容
+        data.forEach(function (item) {
+            table += '<tr>';
+            for (var key in item) {
+                var value = item[key] === undefined ? "N/A" : item[key];
+                table += '<td>' + value + '</td>';
+            }
+            table += '</tr>';
+        });
+
+        table += '</table>';
+        return table;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // 发送GET请求检查用户是否已登录
+        fetch("/user/isLogin")
+        .then(function(response) {
+            // 解析响应中的JSON数据
+            return response.json();
+        })
+        .then(function(data) {
+            // 根据后端返回的数据判断用户是否已登录
+            if (data.code !== 200 ) {
+                // 如果未登录，则直接跳转到loginPage.html
+                window.location.href = "loginPage";
+            }
+        })
+        .catch(function(error) {
+            console.error("检查登录状态失败:", error);
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anydoor Popup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            width: 300px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative; /* 让 .logout 相对于 .container 定位 */
+        }
+        .logout {
+            position: absolute;
+            top: 0;
+            right: 0; /* 将 .logout 定位到右上角 */
+            padding: 10px;
+            cursor: pointer;
+            color: blue;
+            text-decoration: underline;
+        }
+        h1 {
+            margin-top: 0;
+        }
+        button {
+            background-color: #008000;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        p {
+            float: right;
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+    <script src="./js/popup.js"></script>
+</head>
+<body>  
+    <div class="container">
+        <!-- 修改此处，使用 div 代替 button -->
+        <div class="logout" id="logout">退出登录</div>
+        <h1>Anydoor</h1>
+        <button id="loginButton">一键登录</button>
+        <button id="updateButton">一键共享</button>
+        <p>by. SEVENTEEN</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anydoor Popup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            width: 300px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            margin-top: 0;
+            color: #333;
+        }
+        input[type="text"],
+        input[type="password"],
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            background-color: #008000;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #006400;
+        }
+        p {
+            float: right;
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Anydoor</h1>
+        <form id="loginForm">
+            <input type="text" id="username" name="username" placeholder="用户名" required><br>
+            <input type="password" id="password" name="password" placeholder="密码" required><br>
+            <button type="button" id="submitButton">登录</button>
+        </form>
+        <p>by. SEVENTEEN</p>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var submitButton = document.getElementById('submitButton');
+            // 发送GET请求检查用户是否已登录
+            fetch("/user/isLogin")
+                .then(function(response) {
+                    // 解析响应中的JSON数据
+                    return response.json();
+                })
+                .then(function(data) {
+                    // 根据后端返回的数据判断用户是否已登录
+                    if (data.code === 200 ) {
+                        // 如果已登录，则直接跳转到popup.html
+                        window.location.href = "indexPage";
+                    }
+                })
+                .catch(function(error) {
+                    console.error("检查登录状态失败:", error);
+                });
+
+            //登录按钮被点击
+            submitButton.addEventListener('click', function() {
+                var username = document.getElementById("username").value;
+                var password = document.getElementById("password").value;
+                // 构造请求URL，并将参数拼接在URL中
+                var url = "/user/doLogin?username=" + encodeURIComponent(username) + "&password=" + encodeURIComponent(password);
+
+                // 发送POST请求
+                fetch(url, {
+                    method: "POST",
+                    body: "" // 请求体为空字符串
+                })
+                    .then(function(response) {
+                        // 解析响应中的JSON数据
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        debugger
+                        // 根据后端返回的数据判断登录是否成功
+                        if (data.code === 200) {
+                            window.location.href = "indexPage";
+                        } else {
+                            alert("登录失败");
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error("登录失败:", error);
+                    });
+            });
+        });
+    </script>
+</body>
+</html>
