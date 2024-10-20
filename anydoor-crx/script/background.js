@@ -1,16 +1,18 @@
 // 定义服务器地址
-const serverURL = "http://localhost.com";
+const serverURL = "http://anydoor.sqtan.com";
 // 将服务器地址存储到 chrome.storage 中
 chrome.storage.local.set({ serverURL: serverURL });
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     // 登录操作
     if (request.action === "login") {
-        return login(request, sendResponse);
+        login(request, sendResponse);
+        return true; // 保持异步消息通道打开
     }
-    //更新操作
+    // 更新操作
     if (request.action === "update") {
-        return update(request, sendResponse);
+        update(request, sendResponse);
+        return true; // 保持异步消息通道打开
     }
 });
 
@@ -19,103 +21,124 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
  * @param {Object} request - 请求对象
  * @param {Function} sendResponse - 发送响应函数
  */
-function login(request, sendResponse) {
-    // 获取服务器地址
-    chrome.storage.local.get('serverURL', function (data) {
-        var serverURL = data.serverURL;
-        var url = request.url;
-        var tabId = request.tabId; // 获取标签页 ID
+async function login(request, sendResponse) {
+    try {
+        // 获取服务器地址
+        const data = await new Promise((resolve) => {
+            chrome.storage.local.get('serverURL', resolve);
+        });
+        const serverURL = data.serverURL;
+        const url = request.url;
+        const tabId = request.tabId;
 
         // Step 1: 从主页面获取目标页面的Url
         const rootDomain = new URL(url).hostname;
-        console.log('当前标签页的URL是: ' + rootDomain);
-
         if (!rootDomain) {
             console.log('Failed to extract root domain.');
             sendResponse({ success: false });
             return;
         }
-
-        debugger
-        // 在 Step 2 之前，删除当前域名下的所有 Cookie
+        console.log('当前标签页的URL是: ' + rootDomain);
         const baseRootDomain = getBaseDomain(rootDomain);
 
-        chrome.cookies.getAll({}, function (cookies) {
-            cookies.forEach(function (cookie) {
-                const baseCookieDomain = getBaseDomain(cookie.domain);
-                // 使用endsWith判断是否属于同一分组
-                if (baseCookieDomain === baseRootDomain) {
-                    console.log('Found cookie from the same group:', cookie);
-                    // 删除当前cookie
-                    chrome.cookies.remove({
-                        url: `https://${cookie.domain}${cookie.path}`, // 使用cookie的域和路径
-                        name: cookie.name
-                    }, function (removedCookie) {
+        // Step 2: 删除当前域名下的所有 Cookie
+        const cookies = await new Promise((resolve) => {
+            chrome.cookies.getAll({}, resolve);
+        });
+
+        const cookiesToRemove = cookies.filter(cookie => getBaseDomain(cookie.domain) === baseRootDomain);
+        await Promise.all(cookiesToRemove.map(cookie => {
+            return new Promise((resolve) => {
+                chrome.cookies.remove({
+                    url: `https://${cookie.domain}${cookie.path}`,
+                    name: cookie.name
+                }, function (removedCookie) {
+                    if (removedCookie) {
                         console.log("Removed cookie:", removedCookie);
-                    });
-                }
-            });
-
-
-            // Step 3: 远程获取指定页面的数据
-            fetch(serverURL + `/cookieManage/getCookie?domain=${rootDomain}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                const cookies = data;
-                if (data.code !== 200 && data.code !== undefined) {
-                    sendResponse({ success: false });
-                    return false;
-                }
-                // Step 4: 检查当前页面的网站
-                if (!Array.isArray(cookies) || cookies.length === 0) {
-                    alert('当前站点不支持一键登录!');
-                    sendResponse({ success: false });
-                    return;
-                }
-                // Step 5: 解析返回的数据
-                cookies.forEach(function (cookie) {
-                    // Step 6: 过滤掉其他的异常Cookie
-                    // if (cookie.domain === rootDomain) {
-                        const cookieData = JSON.parse(cookie.cookie);
-                        cookieData.forEach(function (cookieItem) {
-                            // Step 7: 设置页面中的Cookie
-                            chrome.cookies.set({
-                                url: url,
-                                name: cookieItem.name,
-                                value: cookieItem.value,
-                                domain: cookieItem.domain,
-                                path: cookieItem.path,
-                                secure: cookieItem.secure,
-                                expirationDate: Math.floor(cookieItem.expirationDate) // 转换为整数
-                            }, (result) => {
-                                if (chrome.runtime.lastError) {
-                                    console.error(`Failed to set cookie: ${cookieItem.name}, Error: ${chrome.runtime.lastError.message}`);
-                                } else {
-                                    console.log(`Successfully set cookie: ${cookieItem.name}`);
-                                }
-                            });
-                        });
-                    // }
+                    }
+                    resolve();
                 });
-                // Step 8: 刷新页面
-                if (tabId) {
-                    chrome.tabs.reload(tabId); // 仅当 tabId 有效时才刷新页面
-                }
-                sendResponse({ success: true }); // 在这里设置完成后，记得发送响应给 popup.js，指示登录是否成功
-            })
-            .catch(error => {
-                console.log('An error occurred while fetching the cookie information:', error);
-                sendResponse({ success: false });
             });
-        }); 
-    });
-    return true; // 需要返回 true 来指示异步消息处理
+        }));
+        console.log("All relevant cookies have been removed.");
+
+        // Step 3: 远程获取指定页面的数据
+        const response = await fetch(serverURL + `/cookieManage/getCookie?domain=${rootDomain}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const dataFetched = await response.json();
+
+        if (!Array.isArray(dataFetched) || dataFetched.length === 0) {
+            alert('当前站点不支持一键登录!');
+            sendResponse({ success: false });
+            return;
+        }
+
+        // Step 4: 解析返回的数据并设置 Cookie
+        for (let cookie of dataFetched) {
+            // 解析 cookie 字符串
+            let cookieData;
+            try {
+                cookieData = JSON.parse(cookie.cookie);
+            } catch (e) {
+                console.error(`Failed to parse cookie data for ${cookie.domain}:`, e);
+                continue; // 跳过解析失败的 cookie
+            }
+
+            for (let cookieItem of cookieData) {
+                // 检查并确保 expirationDate 的值是合法的
+                let expirationDate = cookieItem.expirationDate;
+                if (expirationDate) {
+                    expirationDate = parseFloat(expirationDate);
+                    if (isNaN(expirationDate) || !isFinite(expirationDate)) {
+                        expirationDate = undefined; // 如果非法，将其设置为 undefined
+                    } else {
+                        expirationDate = Math.floor(expirationDate); // 确保是一个整数
+                    }
+                }
+
+                // 准备 cookie 设置参数
+                let cookieDetails = {
+                    url: url,
+                    name: cookieItem.name,
+                    value: cookieItem.value,
+                    domain: cookieItem.domain,
+                    path: cookieItem.path,
+                    secure: cookieItem.secure
+                };
+
+                // 仅在 expirationDate 合法时才添加该属性
+                if (expirationDate) {
+                    cookieDetails.expirationDate = expirationDate;
+                }
+
+                // 设置 cookie
+                await new Promise((resolve) => {
+                    chrome.cookies.set(cookieDetails, (result) => {
+                        if (chrome.runtime.lastError) {
+                            console.error(`Failed to set cookie: ${cookieItem.name}, Error: ${chrome.runtime.lastError.message}`);
+                        } else {
+                            console.log(`Successfully set cookie: ${cookieItem.name}`);
+                        }
+                        resolve();
+                    });
+                });
+            }
+        }
+
+        // Step 5: 刷新页面
+        if (tabId) {
+            chrome.tabs.reload(tabId);
+        }
+        sendResponse({ success: true });
+
+    } catch (error) {
+        console.error('An error occurred:', error);
+        sendResponse({ success: false });
+    }
 }
+
 
 /**
  * 执行更新操作
@@ -178,10 +201,10 @@ function update(request, sendResponse) {
             })
                 .then(response => response.json())
                 .then(responseData => {
-                    if (responseData.code !== 200 && responseData.code !== undefined) {
-                        sendResponse({ success: false });
-                        return false;
-                    }
+                    // if (responseData.code !== 200 && responseData.code !== undefined) {
+                    //     sendResponse({ success: false });
+                    //     return false;
+                    // }
                     if (responseData !== 0) {
                         console.log('Cookie插入和更新成功！');
                         sendResponse({ success: true });
@@ -199,10 +222,12 @@ function update(request, sendResponse) {
     return true; // 需要返回 true 来指示异步消息处理
 }
 
-
+/**
+ * 获取主域名
+ * @param {string} domain - 完整域名
+ * @returns {string} 主域名
+ */
 function getBaseDomain(domain) {
-    // 分割域名
     const parts = domain.split('.');
-    // 如果域名部分大于2，返回最后两部分，表示主域名
     return parts.slice(-2).join('.');
 }
