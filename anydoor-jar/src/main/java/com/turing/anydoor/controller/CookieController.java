@@ -76,4 +76,12 @@ public class CookieController {
         return cookieServiceImpl.delCookie(projectId,domain) ;
     }
 
+    @PostMapping(value = "/delAllCookies")
+    @CrossOrigin(origins = "*")
+    @SaCheckLogin
+    @SaCheckRole(value = {"Admin"})
+    public int delAllCookies() {
+        return cookieServiceImpl.delAllCookies(); // 调用服务层方法删除所有 Cookie
+    }
+
 }

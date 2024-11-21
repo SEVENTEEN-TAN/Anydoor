@@ -16,4 +16,5 @@ public interface CookieService {
 
     int delCookie(String projectId, String domain);
 
+    int delAllCookies();
 }

@@ -81,4 +81,9 @@ public class CookieServiceImpl implements CookieService {
         queryWrapper.eq("project_id", projectId).eq("domain", domain);
         return cookieMapper.delete(queryWrapper);
     }
+
+    @Override
+    public int delAllCookies() {
+        return cookieMapper.delete(null);
+    }
 }
