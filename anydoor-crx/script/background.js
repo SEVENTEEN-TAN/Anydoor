@@ -1,5 +1,5 @@
 // 定义服务器地址
-const serverURL = "http://anydoor.sqtan.com";
+const serverURL = "http://localhost.com";
 // 将服务器地址存储到 chrome.storage 中
 chrome.storage.local.set({ serverURL: serverURL });
 
