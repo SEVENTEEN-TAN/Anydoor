@@ -6,63 +6,93 @@
     <title>Anydoor Popup</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            padding: 0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            background: #e9ecef;
         }
         .container {
             text-align: center;
-            width: 300px;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            position: relative; /* 让 .logout 相对于 .container 定位 */
-        }
-        .logout {
-            position: absolute;
-            top: 0;
-            right: 0; /* 将 .logout 定位到右上角 */
-            padding: 10px;
-            cursor: pointer;
-            color: blue;
-            text-decoration: underline;
+            width: 280px;
+            padding: 30px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            position: relative;
         }
         h1 {
-            margin-top: 0;
+            margin: 0 0 20px;
+            color: #333;
+            font-size: 24px;
+        }
+        input[type="text"],
+        input[type="password"],
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            border-color: #007bff;
+            outline: none;
         }
         button {
-            background-color: #008000;
+            background-color: #007bff;
             color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
             border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            margin: 10px;
-            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .logout {
+            color: blue;
+            text-decoration: underline;
             cursor: pointer;
         }
-        p {
-            float: right;
-            margin: 0;
-            font-size: 12px;
-            color: #666;
+        .admin-link {
+            font-size: 14px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .admin-link:hover {
+            text-decoration: underline;
+        }
+        .author {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #888;
         }
     </style>
-    <script src="./js/popup.js"></script>
 </head>
 <body>  
     <div class="container">
-        <!-- 修改此处，使用 div 代替 button -->
-        <div class="logout" id="logout">退出登录</div>
         <h1>Anydoor</h1>
         <button id="loginButton">一键登录</button>
         <button id="updateButton">一键共享</button>
-        <p>by. SEVENTEEN</p>
+        <div class="footer">
+            <a href="http://anydoor.sqtan.com/loginPage" class="admin-link" target="_blank">后台管理</a>
+            <div class="logout" id="logout">退出登录</div>
+        </div>
+        <div class="author">by. SEVENTEEN</div>
     </div>
+    <script src="./js/popup.js"></script>
 </body>
 </html>
